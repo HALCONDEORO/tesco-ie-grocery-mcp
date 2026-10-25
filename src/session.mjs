@@ -78,7 +78,7 @@ export function isLoginUrl(url) {
  *
  * @param {{profileDir?: string, headed?: boolean, email?: string, password?: string,
  *   timeoutMs?: number, launchContext?: Function, sleep?: Function}} options
- * @returns {Promise<{status: "signed_in"|"not_signed_in"|"timeout", profileDir: string}>}
+ * @returns {Promise<{status: "signed_in"|"timeout", profileDir: string}>}
  */
 export async function login(options = {}) {
   const { profileDir, headed } = resolveSessionConfig(
