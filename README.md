@@ -65,6 +65,10 @@ npx playwright install chromium   # one-time browser download
 npx tesco-ie search "milk"
 npx tesco-ie search --count 10 "milk" "bread" "free range eggs"
 
+# Live check: does fetching work from THIS environment, right now?
+# One real fetch, classified as ok / blocked / no_cache / fetch_error.
+npx tesco-ie doctor
+
 # MCP (stdio), e.g. from Claude Code:
 claude mcp add tesco-ie -- node /path/to/tesco-ie-grocery-mcp/src/server.mjs
 ```
