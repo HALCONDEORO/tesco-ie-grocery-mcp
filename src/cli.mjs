@@ -7,12 +7,14 @@ import { fetchPageHtml, closeBrowser } from "./fetcher.mjs";
 import { searchProducts } from "./search.mjs";
 import { login } from "./session.mjs";
 import { runDoctor } from "./doctor.mjs";
+import { getProduct } from "./product.mjs";
 
 const USAGE = `Usage:
   tesco-ie search [--count N] [--offset N] <query> [more queries...]
   tesco-ie login  [--profile DIR] [--headless]
   tesco-ie doctor                One real fetch against tesco.ie, classified
                                  (ok / blocked / no_cache / fetch_error).
+  tesco-ie product <id> [more ids...]   Product detail by numeric product id.
 
 Environment:
   TESCO_IE_PROFILE   Persistent browser profile directory (holds the Tesco
@@ -54,6 +56,16 @@ try {
     console.log(JSON.stringify({ results }, null, 2));
     // Exit non-zero if every query failed (blocked page or fetch error), so
     // scripts can tell "blocked" apart from "legitimately zero products".
+    process.exit(results.every((r) => r.status !== "ok") ? 1 : 0);
+  } else if (command === "product") {
+    const { positional: ids } = takeFlags(args.slice(1));
+    if (ids.length === 0) {
+      console.error(USAGE);
+      process.exit(2);
+    }
+    const results = [];
+    for (const id of ids) results.push(await getProduct(fetchPageHtml, id));
+    console.log(JSON.stringify({ results }, null, 2));
     process.exit(results.every((r) => r.status !== "ok") ? 1 : 0);
   } else if (command === "doctor") {
     const verdict = await runDoctor(fetchPageHtml);

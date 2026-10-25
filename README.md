@@ -69,6 +69,9 @@ npx tesco-ie search --count 10 "milk" "bread" "free range eggs"
 # One real fetch, classified as ok / blocked / no_cache / fetch_error.
 npx tesco-ie doctor
 
+# Product detail by numeric product id (from search results or product URLs)
+npx tesco-ie product 292769732
+
 # MCP (stdio), e.g. from Claude Code:
 claude mcp add tesco-ie -- node /path/to/tesco-ie-grocery-mcp/src/server.mjs
 ```
@@ -98,6 +101,7 @@ MCP tools:
 | Tool | Scope |
 |------|-------|
 | `search_products` | Search tesco.ie catalogue. Single `query` or batched `queries` (max 10 per call), with `count`/`offset` pagination. Read-only. |
+| `get_product` | Full detail for one product by numeric tesco.ie product id: price, availability, category, plus ingredients, nutrition, origin, pack size and more when the page carries them. Read-only. |
 
 Batched queries run sequentially through the process-wide pacing floor
 (MIN_INTERVAL_MS, 2 s, enforced in the fetcher; the test suite guards the

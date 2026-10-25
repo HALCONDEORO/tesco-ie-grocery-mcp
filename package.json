@@ -1,6 +1,6 @@
 {
   "name": "tesco-ie-grocery-mcp",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "MCP server and CLI for Tesco Ireland (tesco.ie) grocery catalogue: search and product details, no account needed. Read-only; basket and checkout are out of scope (they require the user's own account and confirmation).",
   "type": "module",
   "license": "MIT",
