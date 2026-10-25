@@ -6,10 +6,10 @@ import {
   CallToolRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 import { fetchPageHtml, closeBrowser } from "./fetcher.mjs";
-import { extractProducts, SEARCH_URL } from "./extract.mjs";
+import { searchProducts, MAX_QUERIES_PER_CALL, MAX_COUNT } from "./search.mjs";
 
 const server = new Server(
-  { name: "tesco-ie-grocery-mcp", version: "0.1.0" },
+  { name: "tesco-ie-grocery-mcp", version: "0.2.0" },
   { capabilities: { tools: {} } }
 );
 
@@ -18,13 +18,27 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
     {
       name: "search_products",
       description:
-        "Search the Tesco Ireland (tesco.ie) grocery catalogue. Returns matching products with name, brand, price in EUR, unit price, promo label and product URL. Read-only; no account needed. Basket and checkout are NOT supported: tesco.ie requires the user's own account, and ordering always stays with the user.",
+        "Search the Tesco Ireland (tesco.ie) grocery catalogue. Accepts one query or a batch of up to 10 queries (one per shopping-list item) run sequentially with conservative pacing. Returns, per query, matching products with name, brand, price in EUR, unit price, promo label and product URL, or an explicit status when the fetch was blocked or failed. Read-only; no account needed. Basket and checkout are NOT supported: tesco.ie requires the user's own account, and ordering always stays with the user.",
       inputSchema: {
         type: "object",
         properties: {
-          query: { type: "string", description: "Product search text, e.g. 'milk'." },
+          query: { type: "string", description: "Single product search text, e.g. 'milk'." },
+          queries: {
+            type: "array",
+            description: `Batch mode: up to ${MAX_QUERIES_PER_CALL} queries in one call.`,
+            items: {
+              type: "object",
+              properties: {
+                query: { type: "string", description: "Product search text." },
+                count: { type: "integer", description: `Results per page (1-${MAX_COUNT}, default 24).` },
+                offset: { type: "integer", description: "Pagination offset (default 0)." },
+              },
+              required: ["query"],
+            },
+          },
+          count: { type: "integer", description: `Results per page for single-query mode (1-${MAX_COUNT}, default 24).` },
+          offset: { type: "integer", description: "Pagination offset for single-query mode (default 0)." },
         },
-        required: ["query"],
       },
     },
   ],
@@ -34,25 +48,19 @@ server.setRequestHandler(CallToolRequestSchema, async (req) => {
   if (req.params.name !== "search_products") {
     return { isError: true, content: [{ type: "text", text: `Unknown tool: ${req.params.name}` }] };
   }
-  const query = String(req.params.arguments?.query ?? "").trim();
-  if (!query) return { isError: true, content: [{ type: "text", text: "query is required" }] };
+  const a = req.params.arguments ?? {};
+  const batch = Array.isArray(a.queries) && a.queries.length > 0
+    ? a.queries
+    : [{ query: a.query, count: a.count, offset: a.offset }];
   try {
-    const html = await fetchPageHtml(SEARCH_URL(query));
-    const { status, products } = extractProducts(html);
-    if (status === "no_cache") {
-      return {
-        isError: true,
-        content: [{
-          type: "text",
-          text: "tesco.ie did not return its product cache (challenge page or changed page shape). This is not a zero-result search; the fetcher needs attention.",
-        }],
-      };
-    }
+    const results = await searchProducts(fetchPageHtml, batch);
+    const allFailed = results.every((r) => r.status !== "ok");
     return {
-      content: [{ type: "text", text: JSON.stringify({ query, count: products.length, products }, null, 2) }],
+      isError: allFailed,
+      content: [{ type: "text", text: JSON.stringify({ results }, null, 2) }],
     };
   } catch (e) {
-    return { isError: true, content: [{ type: "text", text: `tesco.ie fetch failed: ${e.message}` }] };
+    return { isError: true, content: [{ type: "text", text: e.message }] };
   }
 });
 

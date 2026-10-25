@@ -1,5 +1,8 @@
 # tesco-ie-grocery-mcp
 
+[![ci](https://github.com/HALCONDEORO/tesco-ie-grocery-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/HALCONDEORO/tesco-ie-grocery-mcp/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+
 MCP server and CLI for the **Tesco Ireland** (tesco.ie) grocery catalogue.
 
 Phase 1 is **read-only**: product search with names, brands, EUR prices, unit
@@ -55,8 +58,9 @@ zero-result search) rather than returning wrong data.
 npm install
 npx playwright install chromium   # one-time browser download
 
-# CLI
+# CLI (each argument is a separate query; quote multi-word terms)
 npx tesco-ie search "milk"
+npx tesco-ie search --count 10 "milk" "bread" "free range eggs"
 
 # MCP (stdio), e.g. from Claude Code:
 claude mcp add tesco-ie -- node /path/to/tesco-ie-grocery-mcp/src/server.mjs
@@ -66,7 +70,13 @@ MCP tools:
 
 | Tool | Scope |
 |------|-------|
-| `search_products` | Search tesco.ie catalogue. Read-only. |
+| `search_products` | Search tesco.ie catalogue. Single `query` or batched `queries` (max 10 per call), with `count`/`offset` pagination. Read-only. |
+
+Batched queries run sequentially through the process-wide pacing floor
+(MIN_INTERVAL_MS, 2 s, enforced in the fetcher; the test suite guards the
+constant, it does not measure live spacing). Each query returns its own
+status (`ok`, `no_cache`, `fetch_error`) so one blocked or failed search
+never sinks the rest of the batch.
 
 ## Development
 
