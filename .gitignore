@@ -1,3 +1,7 @@
 node_modules/
 *.log
 .env
+
+# Persistent browser profiles hold the Tesco session cookies - never commit.
+.tesco-ie-profile/
+**/.tesco-ie-profile/

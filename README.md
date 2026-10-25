@@ -36,7 +36,10 @@ The storefront is fronted by Akamai: plain HTTP clients (curl, node fetch)
 get `403` even with a browser User-Agent (verified 2026-10-25). This project
 fetches pages with a real Chromium via Playwright and enforces a 2 s minimum
 gap between page loads. It ships **no** anti-bot bypass: no fingerprint
-spoofing, no CAPTCHA solving, no aggressive retrying.
+spoofing, no CAPTCHA solving, no aggressive retrying. Since 0.3.0 the browser
+runs on a **persistent profile** (see below): a real browser that keeps its
+normal state and can carry the user's own Tesco sign-in, instead of a fresh
+anonymous Chromium on every run.
 
 **Status (2026-10-25): experimental prototype, not a demonstrated live
 connector.** What is implemented and tested: the extraction layer (against a
@@ -65,6 +68,26 @@ npx tesco-ie search --count 10 "milk" "bread" "free range eggs"
 # MCP (stdio), e.g. from Claude Code:
 claude mcp add tesco-ie -- node /path/to/tesco-ie-grocery-mcp/src/server.mjs
 ```
+
+## Session (sign-in)
+
+Some future features (basket, delivery slots) need the user's own Tesco
+Ireland account, and a persistent real-browser profile also gives Akamai the
+normal signals of an actual browser instead of a fresh anonymous Chromium.
+
+```bash
+npx tesco-ie login                 # opens a visible browser on tesco.ie
+npx tesco-ie login --headless      # only if a session already exists
+```
+
+Sign in with your own account in the opened window; the command detects the
+redirect and confirms `signed_in`. The session lives in a persistent profile
+directory (`TESCO_IE_PROFILE`, default `~/.tesco-ie-grocery-mcp/profile`).
+**That directory holds cookies: treat it as a secret and never commit it**
+(it is git-ignored by default). Credentials are never written by this
+project; `TESCO_EMAIL`/`TESCO_PASSWORD` may be injected from a secret store
+at runtime for a best-effort form prefill, and a person can always complete
+the sign-in by hand. `TESCO_IE_HEADED=1` opens a visible browser for fetches.
 
 MCP tools:
 
