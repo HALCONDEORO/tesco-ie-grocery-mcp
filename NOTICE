@@ -1,0 +1,17 @@
+tesco-ie-grocery-mcp
+Copyright 2026 Marco Tevar
+
+This project is unofficial and not affiliated with or endorsed by Tesco.
+
+Design ideas adapted from these MIT-licensed open-source projects:
+
+- open-supermarkets (https://github.com/abracadabra50/open-supermarkets):
+  the per-country grocery-provider pattern and provider-viability notes.
+- tesco-grocery-mcp (https://github.com/GavinAttard/tesco-grocery-mcp):
+  the batched search tool surface (multiple queries per MCP call) and
+  pagination parameter shape. That project targets Tesco UK's GraphQL API;
+  this project's extraction approach (SSR embedded cache on tesco.ie) is
+  independent and shares no code with it.
+
+The ireland-grocery-mcp repository carries no license and was used as a
+reference for prior-art research only; no code was taken from it.
