@@ -7,6 +7,7 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import { fetchPageHtml, closeBrowser } from "./fetcher.mjs";
 import { searchProducts, MAX_QUERIES_PER_CALL, MAX_COUNT } from "./search.mjs";
+import { getProduct } from "./product.mjs";
 
 const server = new Server(
   { name: "tesco-ie-grocery-mcp", version: "0.2.0" },
@@ -41,10 +42,29 @@ server.setRequestHandler(ListToolsRequestSchema, async () => ({
         },
       },
     },
+    {
+      name: "get_product",
+      description:
+        "Get full detail for one Tesco Ireland product by its numeric tesco.ie product id (the id in product URLs): name, brand, price in EUR, unit price, promo, availability, category, image and URL, plus detail fields (ingredients, nutrition, origin, pack size, storage, preparation) when the page carries them. Read-only; no account needed.",
+      inputSchema: {
+        type: "object",
+        properties: {
+          id: { type: "string", description: "Numeric tesco.ie product id, e.g. '292769732'." },
+        },
+        required: ["id"],
+      },
+    },
   ],
 }));
 
 server.setRequestHandler(CallToolRequestSchema, async (req) => {
+  if (req.params.name === "get_product") {
+    const result = await getProduct(fetchPageHtml, req.params.arguments?.id);
+    return {
+      isError: result.status !== "ok",
+      content: [{ type: "text", text: JSON.stringify(result, null, 2) }],
+    };
+  }
   if (req.params.name !== "search_products") {
     return { isError: true, content: [{ type: "text", text: `Unknown tool: ${req.params.name}` }] };
   }
