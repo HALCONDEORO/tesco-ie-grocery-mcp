@@ -8,7 +8,7 @@ MCP server and CLI for the **Tesco Ireland** (tesco.ie) grocery catalogue.
 Phase 1 is **read-only**: product search with names, brands, EUR prices, unit
 prices, promo labels and product URLs. No account is needed for this phase.
 
-**Not supported, by design:** basket, delivery slots, login and checkout.
+**Not supported, by design:** basket, delivery slots, MCP login and checkout. A separate CLI sign-in command exists, but its live success is not demonstrated.
 Verified 2026-10-25, tesco.ie requires the user's own account even to add an
 item to the basket (an anonymous "Add" redirects to the login page), and
 placing an order always stays with the user in their own browser. A future
@@ -141,3 +141,21 @@ Session verification performs one delayed account check after up to60seconds for
 manual sign-in, not a polling loop. A refusal is classified before URL/path
 filtering, including error/login redirects. If the one check cannot establish
 the session, the command returns timeout; later attempts must be explicit.
+### Refusal and pacing
+Concurrent loads share a serial queue with at least 2s between starts. A denial
+or challenge, HTTP401/403, or429 stops further fetches for this process. There
+are no automatic retries or alternate-profile attempts.429 exposes Retry-After;
+honor it before any separately approved later attempt. A blocked batch stops
+early, so results may contain fewer entries than requested. Network failures
+remain per-query. Offline queue tests measure synthetic time, not live spacing.
+### Site terms and price limits
+
+[Tesco Ireland terms](https://www.tesco.ie/shop/en-IE/zone/terms-and-conditions)
+require consumer use, not business use. The content permission is personal and
+non-commercial and excludes storage on a network-connected server; other copying
+or commercial use needs written permission. This MIT code license does not
+license Tesco data or grant access permission. Do not bypass refusal or challenges.
+
+Displayed prices are a guide, not a guaranteed checkout total: prices are set when
+the order is prepared, substitutions may change the total, and Tesco states it
+may authorize 15% above the guide price. No order or payment is implemented here.

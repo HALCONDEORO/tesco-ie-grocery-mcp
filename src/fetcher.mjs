@@ -16,12 +16,14 @@
 // Tesco's front-end not changing shape.
 
 import { chromium } from "playwright";
+import { createLoadQueue, FetchFailure, blockedHtml } from "./load-control.mjs";
 import { resolveSessionConfig } from "./session.mjs";
 
 // Conservative request pacing, enforced process-wide: at least
 // MIN_INTERVAL_MS between the start of two page loads.
 export const MIN_INTERVAL_MS = 2000;
-let lastLoadStartedAt = 0;
+const enqueue = createLoadQueue({intervalMs: MIN_INTERVAL_MS});
+let refused = null;
 
 let contextPromise = null;
 
@@ -38,25 +40,25 @@ function getContext() {
   return contextPromise;
 }
 
-async function pace() {
-  const wait = MIN_INTERVAL_MS - (Date.now() - lastLoadStartedAt);
-  if (wait > 0) await new Promise((r) => setTimeout(r, wait));
-  lastLoadStartedAt = Date.now();
-}
-
 export async function fetchPageHtml(url, { timeoutMs = 45000 } = {}) {
-  const context = await getContext();
-  const page = await context.newPage();
-  try {
-    await pace();
-    await page.goto(url, { waitUntil: "load", timeout: timeoutMs });
-    // The embedded product cache is part of the initial HTML; a small settle
-    // window lets the SSR scripts finish serializing.
-    await page.waitForTimeout(1500);
-    return await page.content();
-  } finally {
-    await page.close();
-  }
+  return enqueue(async () => {
+    // A refusal stops this process. A caller must not continue the batch or
+    // silently retry with another profile. Restart only after reviewing it.
+    if (refused) throw refused;
+    const context = await getContext();
+    const page = await context.newPage();
+    try {
+      const response = await page.goto(url, {waitUntil:"load",timeout:timeoutMs});
+      const code = response?.status();
+      if (code === 429) { refused = new FetchFailure("rate_limited", "HTTP 429; stop and honor Retry-After", response.headers()["retry-after"] ?? null); throw refused; }
+      if (code === 401 || code === 403) { refused = new FetchFailure("blocked", `HTTP ${code}; no bypass attempted`); throw refused; }
+      if (code >= 400) throw new FetchFailure("fetch_error", `HTTP ${code}`);
+      await page.waitForTimeout(1500);
+      const html = await page.content();
+      if (blockedHtml(html)) { refused = new FetchFailure("blocked", "Challenge or denial page; no bypass attempted"); throw refused; }
+      return html;
+    } finally { await page.close(); }
+  });
 }
 
 export async function closeBrowser() {
