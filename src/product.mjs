@@ -1,3 +1,4 @@
+import {observation} from "./provenance.mjs";
 import { blockedHtml, failureResult } from "./load-control.mjs";
 // Product detail (PDP) fetching and extraction for tesco.ie.
 // Verified 2026-10-25 against a live PDP capture: the product page embeds one
@@ -88,6 +89,7 @@ export async function getProduct(fetchPage, id) {
   }
   try {
     const html = await fetchPage(PRODUCT_URL(clean));
+    const provenance = observation(PRODUCT_URL(clean));
     if (blockedHtml(html)) return {id:clean,status:"blocked",error:"Challenge or denial page; no bypass attempted"};
     const { status, product } = extractProductDetail(html);
     if (status === "no_cache") {
@@ -97,7 +99,7 @@ export async function getProduct(fetchPage, id) {
         error: "tesco.ie did not return its product cache (challenge page or changed page shape).",
       };
     }
-    return { id: clean, status: "ok", product };
+    return { id: clean, status: "ok", product, provenance };
   } catch (e) {
     return {id:clean,...failureResult(e)};
   }
