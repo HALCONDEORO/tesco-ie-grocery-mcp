@@ -8,7 +8,7 @@ MCP server and CLI for the **Tesco Ireland** (tesco.ie) grocery catalogue.
 Phase 1 is **read-only**: product search with names, brands, EUR prices, unit
 prices, promo labels and product URLs. No account is needed for this phase.
 
-**Not supported, by design:** basket, delivery slots, login and checkout.
+**Not supported, by design:** basket, delivery slots, MCP login and checkout. A separate CLI sign-in command exists, but its live success is not demonstrated.
 Verified 2026-10-25, tesco.ie requires the user's own account even to add an
 item to the basket (an anonymous "Add" redirects to the login page), and
 placing an order always stays with the user in their own browser. A future
@@ -126,3 +126,15 @@ per-country viability notes that motivated this repo come from
 [open-supermarkets](https://github.com/abracadabra50/open-supermarkets) (MIT)
 and the provider evaluation notes in
 [uk-grocery-cli](https://github.com/abracadabra50/uk-grocery-cli).
+
+### Site terms and price limits
+
+[Tesco Ireland terms](https://www.tesco.ie/shop/en-IE/zone/terms-and-conditions)
+require consumer use, not business use. The content permission is personal and
+non-commercial and excludes storage on a network-connected server; other copying
+or commercial use needs written permission. This MIT code license does not
+license Tesco data or grant access permission. Do not bypass refusal or challenges.
+
+Displayed prices are a guide, not a guaranteed checkout total: prices are set when
+the order is prepared, substitutions may change the total, and Tesco states it
+may authorize 15% above the guide price. No order or payment is implemented here.
