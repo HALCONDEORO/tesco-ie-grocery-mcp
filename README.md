@@ -126,3 +126,11 @@ per-country viability notes that motivated this repo come from
 [open-supermarkets](https://github.com/abracadabra50/open-supermarkets) (MIT)
 and the provider evaluation notes in
 [uk-grocery-cli](https://github.com/abracadabra50/uk-grocery-cli).
+
+### Refusal and pacing
+Concurrent loads share a serial queue with at least 2s between starts. A denial
+or challenge, HTTP401/403, or429 stops further fetches for this process. There
+are no automatic retries or alternate-profile attempts.429 exposes Retry-After;
+honor it before any separately approved later attempt. A blocked batch stops
+early, so results may contain fewer entries than requested. Network failures
+remain per-query. Offline queue tests measure synthetic time, not live spacing.

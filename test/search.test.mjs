@@ -36,14 +36,14 @@ test("batch returns one result per query, in order", async () => {
   assert.equal(fetcher.calls.length, 2);
 });
 
-test("no_cache and fetch errors are per-query, not fatal to the batch", async () => {
+test("blocked pages stop the batch, not zero-result searches", async () => {
   const fetcher = fakeFetcher({ milk: plp, eggs: CHALLENGE, butter: new Error("nav timeout") });
   const results = await searchProducts(fetcher, [
     { query: "milk" }, { query: "eggs" }, { query: "butter" },
   ]);
-  assert.deepEqual(results.map((r) => r.status), ["ok", "no_cache", "fetch_error"]);
+  assert.deepEqual(results.map((r) => r.status), ["ok", "blocked"]);
   assert.match(results[1].error, /Not a zero-result search/);
-  assert.match(results[2].error, /nav timeout/);
+  assert.equal(fetcher.calls.length,2);
 });
 
 test("count and offset reach the URL and are clamped", async () => {
