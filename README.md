@@ -87,8 +87,10 @@ npx tesco-ie login                 # opens a visible browser on tesco.ie
 npx tesco-ie login --headless      # only if a session already exists
 ```
 
-Sign in with your own account in the opened window; the command detects the
-redirect and confirms `signed_in`. The session lives in a persistent profile
+Sign in with your own account in the opened window; the command requires HTTP200 on the Tesco account origin/path plus a visible
+Sign out/Log out control before confirming `signed_in`. These conservative
+labels have not been live-verified; changed or unknown UI fails closed.
+A denial/challenge stops verification without retrying. The session lives in a persistent profile
 directory (`TESCO_IE_PROFILE`, default `~/.tesco-ie-grocery-mcp/profile`).
 **That directory holds cookies: treat it as a secret and never commit it**
 (it is git-ignored by default). Credentials are never written by this
@@ -127,6 +129,18 @@ per-country viability notes that motivated this repo come from
 and the provider evaluation notes in
 [uk-grocery-cli](https://github.com/abracadabra50/uk-grocery-cli).
 
+### Session privacy and revocation
+The profile is credential-bearing local state. Do not upload it, include it in
+logs, copy it into fixtures or commit it. Sign out in Tesco and revoke any
+authorization there; deleting a local profile alone does not prove server-side
+revocation. Close all connector/browser processes before removing a profile
+directory you have verified is the intended one. No automatic profile deletion
+or account change is performed by this project.
+
+Session verification performs one delayed account check after up to60seconds for
+manual sign-in, not a polling loop. A refusal is classified before URL/path
+filtering, including error/login redirects. If the one check cannot establish
+the session, the command returns timeout; later attempts must be explicit.
 ### Refusal and pacing
 Concurrent loads share a serial queue with at least 2s between starts. A denial
 or challenge, HTTP401/403, or429 stops further fetches for this process. There
