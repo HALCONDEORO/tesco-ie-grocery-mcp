@@ -1,4 +1,5 @@
 import {observation} from "./provenance.mjs";
+import { blockedHtml, failureResult } from "./load-control.mjs";
 // Shared search core used by both the CLI and the MCP server.
 // The page fetcher is injected so the batch/pacing/error logic is testable
 // offline (no browser, no network).
@@ -37,6 +38,7 @@ export async function searchProducts(fetchPage, queries) {
       const sourceUrl = SEARCH_URL(query, {count,offset});
       const html = await fetchPage(sourceUrl);
       const provenance = observation(sourceUrl);
+      if (blockedHtml(html)) { results.push({query,status:"blocked",error:"Challenge or denial page. Not a zero-result search."}); break; }
       const { status, products } = extractProducts(html);
       if (status === "no_cache") {
         results.push({
@@ -49,7 +51,8 @@ export async function searchProducts(fetchPage, queries) {
         results.push({ query, status: "ok", count: products.length, products, provenance });
       }
     } catch (e) {
-      results.push({ query, status: "fetch_error", error: `tesco.ie fetch failed: ${e.message}` });
+      results.push({query,...failureResult(e)});
+      if (["blocked","rate_limited"].includes(results.at(-1).status)) break;
     }
   }
   return results;

@@ -45,6 +45,11 @@ test("MCP server boots, initializes and lists search_products", async () => {
     assert.ok(tool, "search_products must be listed");
     assert.match(tool.description, /Read-only/);
     assert.match(tool.description, /NOT supported/);
+    assert.equal(tool.annotations.readOnlyHint,true);
+    send({jsonrpc:"2.0",id:3,method:"tools/call",params:{name:"search_products",arguments:{query:"milk",queries:[]}}});
+    const invalid = await waitFor(responses,3,10000);
+    assert.equal(invalid.result.isError,true);
+    assert.equal(JSON.parse(invalid.result.content[0].text).status,"invalid_arguments");
   } finally {
     server.kill("SIGINT");
   }

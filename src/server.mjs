@@ -6,8 +6,10 @@ import {
   CallToolRequestSchema,
 } from "@modelcontextprotocol/sdk/types.js";
 import { fetchPageHtml, closeBrowser } from "./fetcher.mjs";
-import { searchProducts, MAX_QUERIES_PER_CALL, MAX_COUNT } from "./search.mjs";
+import { searchProducts } from "./search.mjs";
 import { getProduct } from "./product.mjs";
+
+import { TOOLS, validateArguments } from "./contracts.mjs";
 
 const server = new Server(
   { name: "tesco-ie-grocery-mcp", version: "0.2.0" },
@@ -15,49 +17,12 @@ const server = new Server(
 );
 
 server.setRequestHandler(ListToolsRequestSchema, async () => ({
-  tools: [
-    {
-      name: "search_products",
-      description:
-        "Search the Tesco Ireland (tesco.ie) grocery catalogue. Accepts one query or a batch of up to 10 queries (one per shopping-list item) run sequentially with conservative pacing. Returns, per query, matching products with name, brand, price in EUR, unit price, promo label and product URL, or an explicit status when the fetch was blocked or failed. Read-only; no account needed. Basket and checkout are NOT supported: tesco.ie requires the user's own account, and ordering always stays with the user.",
-      inputSchema: {
-        type: "object",
-        properties: {
-          query: { type: "string", description: "Single product search text, e.g. 'milk'." },
-          queries: {
-            type: "array",
-            description: `Batch mode: up to ${MAX_QUERIES_PER_CALL} queries in one call.`,
-            items: {
-              type: "object",
-              properties: {
-                query: { type: "string", description: "Product search text." },
-                count: { type: "integer", description: `Results per page (1-${MAX_COUNT}, default 24).` },
-                offset: { type: "integer", description: "Pagination offset (default 0)." },
-              },
-              required: ["query"],
-            },
-          },
-          count: { type: "integer", description: `Results per page for single-query mode (1-${MAX_COUNT}, default 24).` },
-          offset: { type: "integer", description: "Pagination offset for single-query mode (default 0)." },
-        },
-      },
-    },
-    {
-      name: "get_product",
-      description:
-        "Get full detail for one Tesco Ireland product by its numeric tesco.ie product id (the id in product URLs): name, brand, price in EUR, unit price, promo, availability, category, image and URL, plus detail fields (ingredients, nutrition, origin, pack size, storage, preparation) when the page carries them. Read-only; no account needed.",
-      inputSchema: {
-        type: "object",
-        properties: {
-          id: { type: "string", description: "Numeric tesco.ie product id, e.g. '292769732'." },
-        },
-        required: ["id"],
-      },
-    },
-  ],
+  tools: TOOLS,
 }));
 
 server.setRequestHandler(CallToolRequestSchema, async (req) => {
+  const error = validateArguments(req.params.name, req.params.arguments ?? {});
+  if (error) return { isError: true, content: [{ type: "text", text: JSON.stringify({status:"invalid_arguments",error}) }] };
   if (req.params.name === "get_product") {
     const result = await getProduct(fetchPageHtml, req.params.arguments?.id);
     return {

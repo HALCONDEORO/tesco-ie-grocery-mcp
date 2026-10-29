@@ -1,3 +1,4 @@
+import {failureResult,blockedHtml} from "./load-control.mjs";
 // Live-environment check: one real fetch against tesco.ie, classified.
 // The point is an honest verdict per environment ("does live fetching work
 // from HERE?"), because the answer depends on Akamai's view of the network
@@ -13,7 +14,7 @@ export function classifyPage(html) {
   if (typeof html !== "string" || html.length === 0) return "no_cache";
   // Akamai's edge denial page: tiny body, "Access Denied", "Reference #"
   // marker (observed 2026-10-25, ~308 bytes).
-  if (/access denied/i.test(html) && /reference #/i.test(html)) return "blocked";
+  if (blockedHtml(html)) return "blocked";
   const { status } = extractProducts(html);
   return status === "ok" ? "ok" : "no_cache";
 }
@@ -53,7 +54,7 @@ export async function runDoctor(fetchPage) {
   try {
     html = await fetchPage(url);
   } catch (e) {
-    return { ...VERDICTS.fetch_error, url, error: e.message };
+    return { ...VERDICTS.fetch_error, url, ...failureResult(e) };
   }
   const cls = classifyPage(html);
   return { ...VERDICTS[cls], url };

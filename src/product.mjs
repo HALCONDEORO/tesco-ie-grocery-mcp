@@ -1,4 +1,5 @@
 import {observation} from "./provenance.mjs";
+import { blockedHtml, failureResult } from "./load-control.mjs";
 // Product detail (PDP) fetching and extraction for tesco.ie.
 // Verified 2026-10-25 against a live PDP capture: the product page embeds one
 // full ProductType entry in the same SSR cache shape as the PLP, with an
@@ -89,6 +90,7 @@ export async function getProduct(fetchPage, id) {
   try {
     const html = await fetchPage(PRODUCT_URL(clean));
     const provenance = observation(PRODUCT_URL(clean));
+    if (blockedHtml(html)) return {id:clean,status:"blocked",error:"Challenge or denial page; no bypass attempted"};
     const { status, product } = extractProductDetail(html);
     if (status === "no_cache") {
       return {
@@ -99,6 +101,6 @@ export async function getProduct(fetchPage, id) {
     }
     return { id: clean, status: "ok", product, provenance };
   } catch (e) {
-    return { id: clean, status: "fetch_error", error: `tesco.ie fetch failed: ${e.message}` };
+    return {id:clean,...failureResult(e)};
   }
 }
