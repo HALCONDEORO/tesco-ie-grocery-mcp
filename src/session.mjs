@@ -72,7 +72,7 @@ export function isLoginUrl(url) {
  * the opened window. Headed mode is the default for this reason.
  *
  * Sign-in is verified factually afterwards: the account URL is loaded and a
- * redirect back to a login URL means "not signed in".
+ * successful account response and positive sign-out control are required.
  *
  * The launcher is injectable so the orchestration is testable offline.
  *
@@ -103,20 +103,23 @@ export async function login(options = {}) {
   const context = await launchContext();
   try {
     const page = context.pages()[0] ?? (await context.newPage());
-    await page.goto(TESCO_ACCOUNT_URL, { waitUntil: "load", timeout: 60000 });
+    const initial = await page.goto(TESCO_ACCOUNT_URL, { waitUntil: "load", timeout: 60000 });
+    if ([401,403,429].includes(initial?.status())) return {status:"blocked",profileDir};
+    const initialText = await page.locator("body").innerText();
+    if (/browser has failed some security checks|access denied|reference #|verify you are human|captcha/i.test(initialText)) return {status:"blocked",profileDir};
 
+    // Never prefill credentials after an unexpected cross-origin redirect.
+    if (new URL(page.url()).origin !== "https://www.tesco.ie") return {status:"unverified",profileDir};
     if (options.email && options.password) {
       await tryGenericFormFill(page, options.email, options.password);
     }
 
-    const deadline = Date.now() + timeoutMs;
-    while (Date.now() < deadline) {
-      // Paced like the fetcher: never more than one page load per 2 s.
-      await sleep(2000);
-      if (await verifySignedIn(context)) {
-        return { status: "signed_in", profileDir };
-      }
-    }
+    // One bounded verification after allowing time for manual sign-in. No
+    // repeated authenticated network polling. A later attempt is caller-driven.
+    await sleep(Math.min(timeoutMs, 60000));
+    const verification = await verifySignedIn(context);
+    if (verification === "blocked") return {status:"blocked",profileDir};
+    if (verification === true) return {status:"signed_in",profileDir};
     return { status: "timeout", profileDir };
   } finally {
     await context.close();
@@ -145,15 +148,26 @@ async function tryGenericFormFill(page, email, password) {
  * Factual sign-in check: load the account URL in a throwaway page inside the
  * same persistent context. Anonymous visitors are redirected to a login URL.
  */
-async function verifySignedIn(context) {
+export async function verifySignedIn(context) {
   const page = await context.newPage();
   try {
     const response = await page.goto(TESCO_ACCOUNT_URL, {
       waitUntil: "load",
       timeout: 45000,
     });
+    // Refusal classification precedes origin/path filtering: refusal pages
+    // often redirect to /error or even /account/login.
+    if ([401,403,429].includes(response?.status())) return "blocked";
+    const text = await page.locator("body").innerText();
+    if (/browser has failed some security checks|access denied|reference #|verify you are human|captcha|temporarily unavailable/i.test(text)) return "blocked";
     const finalUrl = response?.url() ?? page.url();
-    return !isLoginUrl(finalUrl);
+    const url = new URL(finalUrl);
+    if (url.origin !== "https://www.tesco.ie" || !/^\/account(?:\/|$)/.test(url.pathname) || isLoginUrl(finalUrl)) return false;
+    if (!response || response.status() !== 200) return false;
+    // Positive signed-in control, not simply absence of a redirect. These
+    // conservative labels are not live-verified selectors: unknown UI fails closed.
+    return await page.getByRole("link", {name:/^(?:sign out|log out)$/i}).first().isVisible() ||
+      await page.getByRole("button", {name:/^(?:sign out|log out)$/i}).first().isVisible();
   } catch {
     return false;
   } finally {

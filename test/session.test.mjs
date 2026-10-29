@@ -11,6 +11,7 @@ import {
   login,
   parseHeaded,
   resolveSessionConfig,
+  verifySignedIn,
 } from "../src/session.mjs";
 
 test("resolveSessionConfig: explicit option wins over env and default", () => {
@@ -60,15 +61,16 @@ test("isLoginUrl: detects tesco.ie sign-in URLs", () => {
 function fakeContext({ accountFinalUrl }) {
   const page = {
     async goto(url) {
-      this.url = url === "https://www.tesco.ie/account" ? accountFinalUrl : url;
-      return { url: () => this.url };
+      this.currentUrl = url === "https://www.tesco.ie/account" ? accountFinalUrl : url;
+      return { url: () => this.currentUrl, status: () => 200 };
     },
+    getByRole() { return {first:()=>({async isVisible() {return true;}})}; },
     url() {
-      return this.url;
+      return this.currentUrl;
     },
     async close() {},
     locator() {
-      return { first: () => ({ async count() { return 0; } }) };
+      return { first: () => ({ async count() { return 0; } }), async innerText() { return "My account"; } };
     },
   };
   return {
@@ -80,7 +82,7 @@ function fakeContext({ accountFinalUrl }) {
   };
 }
 
-test("login: reports signed_in when the account page does not redirect to login", async () => {
+test("login: reports signed_in only with positive account evidence", async () => {
   const result = await login({
     headed: true,
     sleep: async () => {},
@@ -110,8 +112,10 @@ test("login: a page load failure during verification is not treated as signed in
           navigations += 1;
           // The initial navigation succeeds; verification loads fail.
           if (navigations > 1) throw new Error("net::ERR_CONNECTION_REFUSED");
-          return { url: () => "https://www.tesco.ie/account/login" };
+          return { url: () => "https://www.tesco.ie/account/login", status:()=>200 };
         },
+        locator:()=>({async innerText(){return "Account";}}),
+        url: () => "https://www.tesco.ie/account",
         async close() {},
       };
     },
@@ -124,4 +128,29 @@ test("login: a page load failure during verification is not treated as signed in
     launchContext: async () => failing,
   });
   assert.equal(result.status, "timeout");
+});
+
+test("verification fails closed on error, foreign origin, missing signal and denial",async()=>{
+  for (const [url,status,text,count,expected] of [
+    ["https://evil.invalid/account",200,"My account",1,false],
+    ["https://www.tesco.ie/error",200,"My account",1,false],
+    ["https://www.tesco.ie/account",500,"Error",1,false],
+    ["https://www.tesco.ie/account",200,"My account",0,false],
+    ["https://www.tesco.ie/account",403,"Denied",1,"blocked"],
+    ["https://www.tesco.ie/account",200,"Access Denied Reference #abc",1,"blocked"],
+    ["https://www.tesco.ie/account",200,"browser has failed some security checks",1,"blocked"],
+    ["https://www.tesco.ie/account",200,"My account",1,true],
+  ]) {let closed=false;const ctx={async newPage(){return {async goto(){return {url:()=>url,status:()=>status}},url(){return url},locator(){return {async innerText(){return text}}},getByRole(){return {first:()=>({async isVisible(){return count>0}})}},async close(){closed=true}}}};assert.equal(await verifySignedIn(ctx),expected,url);assert.ok(closed);}
+});
+
+test("refusals on login/error/foreign routes stop before any account-path check",async()=>{
+ for(const url of ["https://www.tesco.ie/error","https://www.tesco.ie/account/login","https://foreign.invalid/error"]){
+  for(const code of [200,401,403,429]){let closed=0;const ctx={async newPage(){return {async goto(){return {url:()=>url,status:()=>code}},locator(){return {async innerText(){return "browser has failed some security checks"}}},async close(){closed++}}}};
+  assert.equal(await verifySignedIn(ctx),"blocked",`${url} ${code}`);assert.equal(closed,1);}
+ }
+});
+test("login performs only one delayed verification and stops on redirected refusal",async()=>{
+ let loads=0,closed=0;const waits=[];const ctx={pages:()=>[],async newPage(){return {async goto(){loads++;return {url:()=>"https://www.tesco.ie/error",status:()=>loads===1?200:403}},url:()=>"https://www.tesco.ie/account",locator:()=>({async innerText(){return "Sign in"}}),async close(){}}},async close(){closed++}};
+ const r=await login({launchContext:async()=>ctx,sleep:async ms=>waits.push(ms)});
+ assert.equal(r.status,"blocked");assert.equal(loads,2);assert.deepEqual(waits,[60000]);assert.equal(closed,1);
 });
