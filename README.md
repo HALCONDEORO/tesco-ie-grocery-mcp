@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/images/repository-banner.png" alt="Grocery Catalogue MCP: Read-only tools for Tesco Ireland" width="100%">
+</p>
+
 # tesco-ie-grocery-mcp
 
 [![ci](https://github.com/HALCONDEORO/tesco-ie-grocery-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/HALCONDEORO/tesco-ie-grocery-mcp/actions/workflows/ci.yml)
