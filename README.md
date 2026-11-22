@@ -80,6 +80,39 @@ npx tesco-ie product 292769732
 claude mcp add tesco-ie -- node /path/to/tesco-ie-grocery-mcp/src/server.mjs
 ```
 
+## Walkthrough: search, compare and draft a list
+
+This is a **synthetic offline example**, not a successful live Tesco fetch.
+Every example product and price below is invented. It works without a Tesco
+account, a browser profile or a network connection:
+
+```bash
+node examples/offline-walkthrough.mjs
+```
+
+1. **Search.** The example starts with three invented porridge-oat packs.
+   For a separate live catalogue search, the existing command is
+   `npx tesco-ie search --count 10 "porridge oats"`. Live fetching is still
+   unproven here. Stop on a refusal or challenge; do not bypass or retry it.
+2. **Compare the same unit.** The example converts grams to kilograms and
+   compares EUR/kg: 500 g at EUR 1.80 is EUR 3.60/kg; 1 kg at EUR 3.20 is
+   EUR 3.20/kg; 750 g at EUR 2.70 is EUR 3.60/kg. Pack B has the lowest
+   invented unit price. A lower unit price does not establish comparable
+   quality, dietary suitability, availability or promotion eligibility.
+   Do not compare EUR/kg with EUR/litre or per-item prices.
+3. **Draft a shopping list.** Two example packs B cost EUR 6.40 in the
+   invented data. The output is a local list with `purchased: false`, not a
+   Tesco basket, reservation, delivery quote or order. This connector has
+   no shopping-list, basket or checkout tool. A user or assistant can keep
+   a separate list, then check products and the final price on Tesco.
+
+![Actual terminal output of the offline synthetic walkthrough. All products and prices are invented.](docs/images/offline-walkthrough.svg)
+
+*Terminal output rendered from the included script, not from a live Tesco session.*
+The script is an educational calculation, not a stock check or price promise.
+Its tests cover unit conversion, invalid weights, tie ordering and integer-cent
+list totals. No product fixture, cookie or personal data is used.
+
 ## Session (sign-in)
 
 Some future features (basket, delivery slots) need the user's own Tesco
