@@ -63,7 +63,7 @@ zero-result search) rather than returning wrong data.
 
 ```bash
 npm install
-npx playwright install chromium   # one-time browser download
+npx playwright install chromium   # required browser download for this installed Playwright version
 
 # CLI (each argument is a separate query; quote multi-word terms)
 npx tesco-ie search "milk"
@@ -234,3 +234,28 @@ The practical result is conservative: preserve unknowns, show observation
 provenance, distinguish item price from unit price, and stop at a challenge or
 refusal. None of these repositories makes bot protection disappear, proves
 current prices, or authorizes basket, account or payment actions.
+
+
+### Browser installation and the November read-only check
+
+After `npm install` or a Playwright version update, run
+`npx playwright install chromium` from this project directory, as the same OS
+user that will run the CLI. Installing npm dependencies alone does not prove the
+matching browser executable exists. A missing executable now produces that
+explicit command. It does not download a browser, sign in, load Tesco, or retry
+a blocked request for you. For Linux system-library issues, use Playwright's
+official installation guidance and your administrator; do not bypass challenges.
+
+On 22 November 2026, one signed-out public browser search for “porridge oats”
+rendered product prices and €/kg labels. The existing extractor parsed24 SSR
+records but lost nested `price.unitPrice`; the minimal captured price shape is
+now covered by a regression test. No full Tesco page, cookies or sessions are
+committed. Catalog prices are observations, not a delivery-stock promise.
+
+This was not a successful end-to-end test of the CLI launcher: its local launch
+failed before navigation because its matching browser binary was missing.
+The separate browser's category-to-search client navigation also retained older
+SSR scripts, so extracting those scripts did not prove the visible search order.
+This patch fixes the nested unit-price field only. It does not claim to fix SPA
+cache selection or validate live search results, login, basket or checkout.
+No further Tesco requests were made for this patch.
