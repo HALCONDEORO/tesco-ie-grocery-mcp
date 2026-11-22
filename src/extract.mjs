@@ -91,8 +91,8 @@ function findObjectEnd(text, start) {
 function normalizeProduct(raw) {
   if (!raw?.id || !raw?.tpnb) return null;
   const price = raw.price?.actual ?? raw.price?.value ?? null;
-  const unitPrice = raw.unitPrice?.price ?? raw.unitPrice?.value ?? null;
-  const unitMeasure = raw.unitPrice?.unitOfMeasure ?? null;
+  const unitPrice = raw.price?.unitPrice ?? raw.unitPrice?.price ?? raw.unitPrice?.value ?? null;
+  const unitMeasure = raw.price?.unitOfMeasure ?? raw.unitPrice?.unitOfMeasure ?? null;
   const promo = raw.promotions?.[0]?.offerText ?? raw.promotions?.[0]?.description ?? null;
   return {
     id: String(raw.id),
