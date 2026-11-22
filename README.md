@@ -247,15 +247,17 @@ a blocked request for you. For Linux system-library issues, use Playwright's
 official installation guidance and your administrator; do not bypass challenges.
 
 On 22 November 2026, one signed-out public browser search for “porridge oats”
-rendered product prices and €/kg labels. The existing extractor parsed24 SSR
-records but lost nested `price.unitPrice`; the minimal captured price shape is
-now covered by a regression test. No full Tesco page, cookies or sessions are
-committed. Catalog prices are observations, not a delivery-stock promise.
+visually rendered product prices and €/kg labels. This is an observation of the
+browser page, not proof of the CLI's extraction or result order. Catalog prices
+are observations, not a delivery-stock promise.
+
+The nested `price.unitPrice` regression uses a minimal shape fixture. It proves
+normalization of that input shape only, not extraction from the actual live SSR
+page. No full Tesco page, cookies or sessions are committed.
 
 This was not a successful end-to-end test of the CLI launcher: its local launch
 failed before navigation because its matching browser binary was missing.
-The separate browser's category-to-search client navigation also retained older
-SSR scripts, so extracting those scripts did not prove the visible search order.
-This patch fixes the nested unit-price field only. It does not claim to fix SPA
-cache selection or validate live search results, login, basket or checkout.
-No further Tesco requests were made for this patch.
+This patch fixes the nested unit-price field only. It does not validate cache
+selection or visible result order during client-side navigation, or demonstrate
+live search, login, basket or checkout. No further Tesco requests were made for
+this patch.
