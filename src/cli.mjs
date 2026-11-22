@@ -8,6 +8,7 @@ import { searchProducts } from "./search.mjs";
 import { login } from "./session.mjs";
 import { runDoctor } from "./doctor.mjs";
 import { getProduct } from "./product.mjs";
+import { parseSearchArgs } from "./cli-args.mjs";
 
 const USAGE = `Usage:
   tesco-ie search [--count N] [--offset N] <query> [more queries...]
@@ -44,11 +45,12 @@ function takeFlags(args) {
 
 try {
   if (command === "search") {
-    const { flags, positional: queries } = takeFlags(args.slice(1));
-    if (queries.length === 0) {
-      console.error(USAGE);
+    const parsed = parseSearchArgs(args.slice(1));
+    if (parsed.error) {
+      console.error(`Error: ${parsed.error}\n${USAGE}`);
       process.exit(2);
     }
+    const { flags, queries } = parsed;
     const results = await searchProducts(
       fetchPageHtml,
       queries.map((query) => ({ query, count: flags["--count"], offset: flags["--offset"] }))
