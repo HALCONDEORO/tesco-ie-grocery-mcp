@@ -59,6 +59,31 @@ Until a live fetch is demonstrated from a given environment, treat live use
 as unproven there; the fetcher fails loudly (`no_cache`, distinct from a
 zero-result search) rather than returning wrong data.
 
+## Automated live-use hold (22 November 2026)
+
+Live automation, further end-to-end requests, account access, basket operations
+and checkout validation are paused. The [Tesco Ireland terms](https://www.tesco.ie/shop/en-IE/zone/terms-and-conditions)
+were reviewed on 22 November 2026. Their Intellectual property section permits
+personal, non-commercial display and local storage, but excludes storage on a
+server or other network-connected storage device, and requires written
+permission for other copying or use. Registration/use must be as a consumer,
+not in a business capacity. The reviewed text does not expressly authorize this
+project's automated remote extraction workflow.
+
+This is a permission gap for the proposed workflow, not a legal conclusion that
+every form of automation is forbidden. Successful page access and the MIT
+license of this code do not settle that gap. Do not treat installation commands
+or earlier browser observations below as permission or proof of shopping readiness.
+Further live testing or implementation toward account/basket/checkout needs a
+supported access route or written permission covering the intended use, followed
+by a fresh review. Do not bypass challenges, copy sessions or import cookies.
+No additional Tesco product requests were made for this terms review.
+
+A safe alternative while paused is to prepare a shopping list offline from data
+the user supplies and let the user complete shopping in their own browser.
+This repository remains read-only; it cannot place an order. Any eventual paid
+order would still require the user's approval of the items, total and conditions.
+
 ## Install and use
 
 ```bash
