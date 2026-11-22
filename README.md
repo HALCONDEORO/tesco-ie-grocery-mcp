@@ -63,7 +63,7 @@ zero-result search) rather than returning wrong data.
 
 ```bash
 npm install
-npx playwright install chromium   # one-time browser download
+npx playwright install chromium   # required browser download for this installed Playwright version
 
 # CLI (each argument is a separate query; quote multi-word terms)
 npx tesco-ie search "milk"
@@ -234,3 +234,30 @@ The practical result is conservative: preserve unknowns, show observation
 provenance, distinguish item price from unit price, and stop at a challenge or
 refusal. None of these repositories makes bot protection disappear, proves
 current prices, or authorizes basket, account or payment actions.
+
+
+### Browser installation and the November read-only check
+
+After `npm install` or a Playwright version update, run
+`npx playwright install chromium` from this project directory, as the same OS
+user that will run the CLI. Installing npm dependencies alone does not prove the
+matching browser executable exists. A missing executable now produces that
+explicit command. It does not download a browser, sign in, load Tesco, or retry
+a blocked request for you. For Linux system-library issues, use Playwright's
+official installation guidance and your administrator; do not bypass challenges.
+
+On 22 November 2026, one signed-out public browser search for “porridge oats”
+visually rendered product prices and €/kg labels. This is an observation of the
+browser page, not proof of the CLI's extraction or result order. Catalog prices
+are observations, not a delivery-stock promise.
+
+The nested `price.unitPrice` regression uses a minimal shape fixture. It proves
+normalization of that input shape only, not extraction from the actual live SSR
+page. No full Tesco page, cookies or sessions are committed.
+
+This was not a successful end-to-end test of the CLI launcher: its local launch
+failed before navigation because its matching browser binary was missing.
+This patch fixes the nested unit-price field only. It does not validate cache
+selection or visible result order during client-side navigation, or demonstrate
+live search, login, basket or checkout. No further Tesco requests were made for
+this patch.

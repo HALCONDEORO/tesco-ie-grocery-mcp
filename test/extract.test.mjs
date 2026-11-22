@@ -53,3 +53,19 @@ test("a literal < inside script content does not truncate the capture", () => {
   assert.equal(products.length, 1);
   assert.equal(products[0].tpnb, "81245629");
 });
+
+// Minimal price-only shape transcribed from the 22 November public-page capture.
+// It is not the full page or proof of current pricing or search result order.
+test("captured nested PriceType retains item price and kg comparison separately", () => {
+  const captured = '<script>{"ProductType:313375618":{"__typename":"ProductType","id":"313375618","tpnb":"91719947","title":"Tesco Porridge Oats 1.5Kg","price":{"__typename":"PriceType","actual":1.45,"unitPrice":0.97,"unitOfMeasure":"kg"}}}</script>';
+  const product = extractProducts(captured).products[0];
+  assert.equal(product.price, 1.45);
+  assert.deepEqual(product.unitPrice, {price:0.97,per:"kg"});
+  assert.equal(product.isForSale, null);
+});
+test("nested unit price preserves zero and legacy top-level shape", () => {
+  const html = raw => '<script>'+JSON.stringify({__typename:"ProductType",id:"123456789",tpnb:"12345678",...raw})+'</script>';
+  assert.deepEqual(extractProducts(html({price:{actual:2,unitPrice:0,unitOfMeasure:"kg"}})).products[0].unitPrice,{price:0,per:"kg"});
+  assert.deepEqual(extractProducts(html({unitPrice:{price:3,unitOfMeasure:"l"}})).products[0].unitPrice,{price:3,per:"l"});
+  assert.equal(extractProducts(html({price:{actual:2}})).products[0].unitPrice,null);
+});

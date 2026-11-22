@@ -27,6 +27,14 @@ let refused = null;
 
 let contextPromise = null;
 
+// Classify only the known missing-browser launch error. Do not install or retry.
+export function browserLaunchFailure(error) {
+  if (/Executable doesn't exist at/.test(error?.message ?? "")) {
+    return new FetchFailure("fetch_error", "Playwright Chromium is not installed for this package version and OS user. From this project directory run: npx playwright install chromium . Then run npm test. No Tesco request was made by this failed launch; do not retry automatically.");
+  }
+  return error;
+}
+
 function getContext() {
   contextPromise ??= (() => {
     const { profileDir, headed } = resolveSessionConfig();
@@ -35,7 +43,7 @@ function getContext() {
       viewport: { width: 1280, height: 900 },
       locale: "en-IE",
       timezoneId: "Europe/Dublin",
-    });
+    }).catch(error => { throw browserLaunchFailure(error); });
   })();
   return contextPromise;
 }
