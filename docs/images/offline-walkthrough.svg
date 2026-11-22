@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1160" height="555" viewBox="0 0 1160 555">
+<rect width="100%" height="100%" rx="16" fill="#101820"/>
+<text x="30" y="40" fill="#8edbb5" font-family="monospace" font-size="18">Captured script output · synthetic data · no live Tesco request</text>
+<text x="30" y="88" fill="#e4edf3" font-family="monospace" font-size="17">OFFLINE&#160;SYNTHETIC&#160;EXAMPLE.&#160;NOT&#160;TESCO&#160;PRODUCTS&#160;OR&#160;PRICES.</text>
+<text x="30" y="117" fill="#e4edf3" font-family="monospace" font-size="17">1.&#160;Search&#160;example:&#160;porridge&#160;oats.&#160;No&#160;network&#160;request&#160;is&#160;made.</text>
+<text x="30" y="146" fill="#e4edf3" font-family="monospace" font-size="17">Example&#160;porridge&#160;oats&#160;B&#160;|&#160;1000&#160;g&#160;|&#160;EUR&#160;3.20&#160;|&#160;EUR&#160;3.20/kg</text>
+<text x="30" y="175" fill="#e4edf3" font-family="monospace" font-size="17">Example&#160;porridge&#160;oats&#160;A&#160;|&#160;500&#160;g&#160;|&#160;EUR&#160;1.80&#160;|&#160;EUR&#160;3.60/kg</text>
+<text x="30" y="204" fill="#e4edf3" font-family="monospace" font-size="17">Example&#160;porridge&#160;oats&#160;C&#160;|&#160;750&#160;g&#160;|&#160;EUR&#160;2.70&#160;|&#160;EUR&#160;3.60/kg</text>
+<text x="30" y="233" fill="#e4edf3" font-family="monospace" font-size="17">2.&#160;Compare&#160;only&#160;equivalent&#160;products&#160;and&#160;the&#160;same&#160;unit.</text>
+<text x="30" y="262" fill="#e4edf3" font-family="monospace" font-size="17">3.&#160;Draft&#160;shopping&#160;list,&#160;not&#160;a&#160;basket&#160;or&#160;order:</text>
+<text x="30" y="291" fill="#e4edf3" font-family="monospace" font-size="17">{</text>
+<text x="30" y="320" fill="#e4edf3" font-family="monospace" font-size="17">&#160;&#160;&quot;item&quot;:&#160;&quot;Example&#160;porridge&#160;oats&#160;B&quot;,</text>
+<text x="30" y="349" fill="#e4edf3" font-family="monospace" font-size="17">&#160;&#160;&quot;quantity&quot;:&#160;2,</text>
+<text x="30" y="378" fill="#e4edf3" font-family="monospace" font-size="17">&#160;&#160;&quot;packGrams&quot;:&#160;1000,</text>
+<text x="30" y="407" fill="#e4edf3" font-family="monospace" font-size="17">&#160;&#160;&quot;exampleTotalCents&quot;:&#160;640,</text>
+<text x="30" y="436" fill="#e4edf3" font-family="monospace" font-size="17">&#160;&#160;&quot;purchased&quot;:&#160;false</text>
+<text x="30" y="465" fill="#e4edf3" font-family="monospace" font-size="17">}</text>
+<text x="30" y="494" fill="#e4edf3" font-family="monospace" font-size="17">Live&#160;prices,&#160;stock,&#160;promotions,&#160;eligibility&#160;and&#160;delivery&#160;remain&#160;unverified.</text>
+</svg>
