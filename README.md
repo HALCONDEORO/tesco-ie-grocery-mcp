@@ -206,3 +206,31 @@ license Tesco data or grant access permission. Do not bypass refusal or challeng
 Displayed prices are a guide, not a guaranteed checkout total: prices are set when
 the order is prepared, substitutions may change the total, and Tesco states it
 may authorize 15% above the guide price. No order or payment is implemented here.
+
+
+## Public implementation review (22 November 2026)
+
+The following repositories and their actual LICENSE files were read, along
+with the relevant product/error code. All five snapshots use the MIT license.
+A code license does not grant access to Tesco or license its catalogue data.
+This review does not claim any upstream connector currently works in Ireland.
+
+| Repository and reviewed commit | Useful idea | Decision for this project |
+| --- | --- | --- |
+| [GavinAttard/tesco-grocery-mcp](https://github.com/GavinAttard/tesco-grocery-mcp/) `84da9c119ac913595d063c66e4c4a8951760aaaa` | Separate HTTP429 from authentication errors, and product price from unit price (`src/client.ts`, `src/transform.ts`). | Keep explicit refusal results and separate units already present here. Do not import UK GraphQL/token/session or basket code. Do not copy its missing-number-to-zero default. |
+| [lemoncurd/open-supermarkets](https://github.com/lemoncurd/open-supermarkets) `f139658036f0278859ed824e3556b898bbbd6fca` | Compact product fields with explicit currency; provider capabilities; readable failure categories (`src/providers/types.ts`, `src/errors.ts`). | Reuse these design ideas, not source code. Keep this project's unknown stock/price as null. Reject its Tesco normalizer's unit-price fallback for item price and default-available stock inference. Do not import session advice or automatic retry suggestions. |
+| [ems-port/uk-grocery-cli](https://github.com/ems-port/uk-grocery-cli) `3ffa9cd3bfe7991ac3621e0d2f7df3990649c848` | Product and unit-price fields are separate (`src/providers/tesco/index.ts`). | No source copied: UK-specific price/promotion assumptions and cookie import are outside the public, no-account test. Missing stock must not become true here. |
+| [nicovlr/mcp-carrefour](https://github.com/nicovlr/mcp-carrefour) `d41564d5062497c686cdc3b46b21d98c0a132d05` | A cache and request spacing can avoid repeated loads (`src/api/client.py`). | Design reference only. No copying of browser impersonation, session initialization or repeated requests after403/429. Existing stop-on-refusal and sequential queue stay stricter. |
+| [Blee1077/tesco-product-scrape](https://github.com/Blee1077/tesco-product-scrape) `73f62f0d2a7497ac9d7add3f14602ce8603cbb07` | Separates item price, comparison price and comparison unit (`functions/2_scrape_categories/app.py`). | No source copied: UK DOM selectors, AWS pipeline, residential proxies and randomized user agents do not fit this small Ireland read-only connector. |
+
+Attribution for the newly reviewed design ideas: Gavin Attard (MIT,2026),
+Zishan Ashraf (MIT,2026, open-supermarkets and uk-grocery-cli), nicovlr
+(MIT,2026), and Blee1077 (MIT,2022). No third-party source code was added by
+this review, so no upstream routines or dependencies were transplanted.
+If source is copied in a later change, retain its actual copyright and full MIT
+permission notice with the adapted code. Existing attributions in NOTICE remain.
+
+The practical result is conservative: preserve unknowns, show observation
+provenance, distinguish item price from unit price, and stop at a challenge or
+refusal. None of these repositories makes bot protection disappear, proves
+current prices, or authorizes basket, account or payment actions.
